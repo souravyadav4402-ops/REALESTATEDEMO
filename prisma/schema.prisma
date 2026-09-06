@@ -1,0 +1,233 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AssetClass {
+  LUXURY_RESIDENTIAL
+  COMMERCIAL
+  BOUTIQUE_VILLAS
+  ESTATE
+}
+
+enum ProjectStatus {
+  PRE_LAUNCH
+  UNDER_CONSTRUCTION
+  READY
+  SOLD_OUT
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  MODEL_3D
+  BROCHURE
+}
+
+enum LeadStatus {
+  NEW
+  QUEUED
+  COMPLETE
+  PARTIAL_FAILED
+  ARCHIVED
+}
+
+enum DeliveryStatus {
+  NOT_CONFIGURED
+  PENDING
+  SUCCEEDED
+  FAILED
+  UNCERTAIN
+}
+
+enum IntegrationProvider {
+  LEADSQUARED
+  WHATSAPP
+  SENDGRID
+}
+
+enum OutboxStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  UNCERTAIN
+}
+
+enum PrivacyRequestType {
+  ACCESS
+  CORRECTION
+  DELETION
+  OBJECTION
+  WITHDRAWAL
+}
+
+enum PrivacyRequestStatus {
+  RECEIVED
+  IN_REVIEW
+  COMPLETED
+  REJECTED
+}
+
+model Project {
+  id            String        @id @default(cuid())
+  title         String
+  slug          String        @unique
+  location      String
+  region        String
+  assetClass    AssetClass
+  priceRangeINR Decimal       @db.Decimal(16, 2)
+  priceRangeUSD Decimal       @db.Decimal(16, 2)
+  status        ProjectStatus
+  reraNumber    String        @unique
+  description   String?       @db.Text
+  brochureUrl   String?
+  featured      Boolean       @default(false)
+  publishedAt   DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  media         Media[]
+  floorPlans    FloorPlan[]
+  leads         Lead[]
+
+  @@index([region, assetClass, status])
+  @@index([featured, publishedAt(sort: Desc)])
+  @@index([priceRangeINR])
+  @@map("projects")
+}
+
+model Media {
+  id        String    @id @default(cuid())
+  projectId String
+  type      MediaType
+  url       String
+  altText   String
+  width     Int?
+  height    Int?
+  sortOrder Int       @default(0)
+  createdAt DateTime  @default(now())
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, type, sortOrder])
+  @@map("media")
+}
+
+model FloorPlan {
+  id        String   @id @default(cuid())
+  projectId String
+  direction String
+  bhkType   String
+  sqft      Int
+  imageUrl  String
+  vastuData Json?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, bhkType, sqft])
+  @@index([direction])
+  @@map("floor_plans")
+}
+
+model Lead {
+  id                   String              @id @default(cuid())
+  idempotencyKey       String              @unique
+  requestFingerprint   String
+  name                 String
+  email                String
+  phone                String
+  countryCode          String
+  nriStatus            Boolean             @default(false)
+  propertyType         String
+  budgetCategory       String
+  budgetCrores         Int
+  locationFocus        String
+  projectOfInterest    String?
+  projectTimeline      String
+  utmSource            String?
+  utmMedium            String?
+  utmCampaign          String?
+  status               LeadStatus          @default(NEW)
+  crmStatus            DeliveryStatus      @default(NOT_CONFIGURED)
+  whatsappStatus       DeliveryStatus      @default(NOT_CONFIGURED)
+  emailStatus          DeliveryStatus      @default(NOT_CONFIGURED)
+  crmLeadId            String?
+  consentAt            DateTime
+  privacyNoticeVersion String
+  lastContactAt        DateTime            @default(now())
+  retentionHoldUntil   DateTime?
+  legalHold            Boolean             @default(false)
+  contractActive       Boolean             @default(false)
+  anonymizedAt         DateTime?
+  projectId            String?
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  project              Project?            @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  outbox               IntegrationOutbox[]
+  privacyRequests      PrivacyRequest[]
+
+  @@index([email, createdAt(sort: Desc)])
+  @@index([phone, createdAt(sort: Desc)])
+  @@index([nriStatus, budgetCategory, createdAt(sort: Desc)])
+  @@index([status, createdAt])
+  @@index([lastContactAt, anonymizedAt])
+  @@index([utmSource, createdAt])
+  @@map("leads")
+}
+
+model IntegrationOutbox {
+  id                String              @id @default(cuid())
+  leadId            String
+  provider          IntegrationProvider
+  status            OutboxStatus        @default(PENDING)
+  attemptCount      Int                 @default(0)
+  nextAttemptAt     DateTime            @default(now())
+  lockedAt          DateTime?
+  lockToken         String?
+  completedAt       DateTime?
+  providerReference String?
+  lastErrorCode     String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  lead              Lead                @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@unique([leadId, provider])
+  @@index([status, nextAttemptAt])
+  @@index([leadId, status])
+  @@map("integration_outbox")
+}
+
+model PrivacyRequest {
+  id             String               @id @default(cuid())
+  leadId         String?
+  type           PrivacyRequestType
+  status         PrivacyRequestStatus @default(RECEIVED)
+  requesterHash  String
+  resolutionCode String?
+  receivedAt     DateTime             @default(now())
+  completedAt    DateTime?
+  lead           Lead?                @relation(fields: [leadId], references: [id], onDelete: SetNull)
+
+  @@index([status, receivedAt])
+  @@index([leadId, receivedAt])
+  @@map("privacy_requests")
+}
+
+model WhatsAppWebhookEvent {
+  id          String    @id @default(cuid())
+  payloadHash String    @unique
+  eventType   String
+  payload     Json
+  receivedAt  DateTime  @default(now())
+  processedAt DateTime?
+  expiresAt   DateTime
+
+  @@index([processedAt, receivedAt])
+  @@index([expiresAt])
+  @@map("whatsapp_webhook_events")
+}
