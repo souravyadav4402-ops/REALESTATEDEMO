@@ -1,0 +1,67 @@
+{
+  "$schema": "./site.schema.json",
+  "brand": {
+    "name": "Parcel & Form India",
+    "shortName": "P/F India",
+    "legalName": "Parcel & Form Digital Studio",
+    "tagline": "Independent digital studio · Luxury real estate",
+    "email": "projects@studio.in",
+    "phone": "+91 90000 00000",
+    "whatsapp": "https://wa.me/919000000000?text=I%20would%20like%20to%20discuss%20a%20luxury%20real-estate%20project.",
+    "locations": ["Worli, Mumbai", "Indiranagar, Bengaluru", "London"]
+  },
+  "baseUrl": "https://www.parcelandform.in",
+  "defaultLocale": "en-IN",
+  "currencies": ["INR", "USD", "AED"],
+  "navigation": [
+    { "label": "Home", "href": "/" },
+    { "label": "Work", "href": "/work" },
+    { "label": "Services", "href": "/services" },
+    { "label": "Approach", "href": "/approach" },
+    { "label": "Journal", "href": "/journal" },
+    { "label": "Inquire", "href": "/contact", "featured": true }
+  ],
+  "pages": {
+    "home": {
+      "path": "/",
+      "title": "Luxury Real Estate Digital Studio India",
+      "description": "Bespoke digital platforms, interactive 3D twins and brand stories for landmark Indian real estate.",
+      "openGraph": { "title": "Turning Indian Square Feet into Global Objects of Desire", "description": "Digital platforms for India's most ambitious property brands.", "type": "website" }
+    },
+    "work": {
+      "path": "/work",
+      "title": "Selected Real Estate Work",
+      "description": "Concept platforms for luxury residences, private estates and landmark developments across India.",
+      "openGraph": { "title": "Landmark Residences. Distinctive Digital Addresses.", "description": "Explore luxury Indian real-estate concept studies.", "type": "website" }
+    },
+    "services": {
+      "path": "/services",
+      "title": "Real Estate Branding, CGI & Web Engineering",
+      "description": "Strategy, architectural CGI, digital experience and NRI conversion systems for Indian developers.",
+      "openGraph": { "title": "From Site Blueprint to Sold Out", "description": "A connected digital sales engine for luxury real estate.", "type": "website" }
+    },
+    "approach": {
+      "path": "/approach",
+      "title": "Our Approach to Indian Luxury",
+      "description": "International modernism, Indian heritage, subtle Vastu intelligence and transparent digital sales experiences.",
+      "openGraph": { "title": "International Modernism Meets Indian Heritage", "description": "The principles behind our real-estate experiences.", "type": "website" }
+    },
+    "journal": {
+      "path": "/journal",
+      "title": "Indian Real Estate Intelligence",
+      "description": "Ideas on Indian prop-tech, NRI capital, architectural visualization and digital-first launches.",
+      "openGraph": { "title": "Insights for the New Indian Skyline", "description": "Intelligence for ambitious real-estate leaders.", "type": "website" }
+    },
+    "contact": {
+      "path": "/contact",
+      "title": "Inquire About a Project",
+      "description": "Tell us about your next landmark development, private estate or luxury property brand.",
+      "openGraph": { "title": "Let's Shape Your Next Landmark", "description": "Start a private consultation with Parcel & Form India.", "type": "website" }
+    }
+  },
+  "openGraph": {
+    "siteName": "Parcel & Form India",
+    "locale": "en_IN",
+    "image": "/opengraph-image"
+  }
+}
