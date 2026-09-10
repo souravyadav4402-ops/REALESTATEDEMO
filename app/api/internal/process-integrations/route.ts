@@ -1,5 +1,5 @@
 import { DeliveryStatus, IntegrationProvider, LeadStatus, OutboxStatus, Prisma, PrivacyRequestStatus } from "@prisma/client";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { configuredValue, hasConfiguredValues } from "@/lib/env";
 import { isEmailConfigured, notifyStudio } from "@/lib/email";
@@ -274,9 +274,18 @@ async function enforceRetention() {
   return { anonymizedLeads: expired.length, purgedWebhookEvents: purgedEvents.count };
 }
 
-export async function POST(request: NextRequest) {
+function authorizedWorkerRequest(request: NextRequest) {
+  const supplied = request.headers.get("authorization") ?? "";
+  const expected = `Bearer ${configuredValue("CRON_SECRET")}`;
+  const suppliedDigest = createHash("sha256").update(supplied).digest();
+  const expectedDigest = createHash("sha256").update(expected).digest();
+  return timingSafeEqual(suppliedDigest, expectedDigest);
+}
+
+// Vercel Cron invokes the schedule with GET; POST remains available for other schedulers.
+async function runWorker(request: NextRequest) {
   if (!hasConfiguredValues("CRON_SECRET")) return NextResponse.json({ success: false, message: "Worker is not configured." }, { status: 503 });
-  if (request.headers.get("authorization") !== `Bearer ${configuredValue("CRON_SECRET")}`) return NextResponse.json({ success: false }, { status: 401 });
+  if (!authorizedWorkerRequest(request)) return NextResponse.json({ success: false }, { status: 401 });
   if (!hasConfiguredValues("DATABASE_URL")) return NextResponse.json({ success: false, message: "Database is not configured." }, { status: 503 });
 
   try {
@@ -294,4 +303,12 @@ export async function POST(request: NextRequest) {
     console.error(JSON.stringify({ level: "error", event: "integration_worker_failed", errorCode: safeErrorCode(error) }));
     return NextResponse.json({ success: false, message: "Integration worker failed." }, { status: 500 });
   }
+}
+
+export async function GET(request: NextRequest) {
+  return runWorker(request);
+}
+
+export async function POST(request: NextRequest) {
+  return runWorker(request);
 }

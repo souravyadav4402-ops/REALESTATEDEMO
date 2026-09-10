@@ -12,7 +12,7 @@
 9. Ambiguous network outcomes and expired processing leases move to `UNCERTAIN` for operator reconciliation instead of being replayed. Production fails closed unless PostgreSQL, trusted proxy identity, Redis, worker authentication, a studio-visible provider and deployment-specific privacy identity are configured.
 
 ## Integration worker operations
-Set a high-entropy `CRON_SECRET`, then have a trusted scheduler send `Authorization: Bearer <CRON_SECRET>` to the internal worker once per minute. Do not expose the secret to browsers. Each claim carries a unique token. A lease older than 15 minutes is quarantined as uncertain, never automatically replayed, because the provider may have accepted the request before the worker stopped.
+Set a high-entropy `CRON_SECRET`, then have a trusted scheduler send `Authorization: Bearer <CRON_SECRET>` to the internal worker once per minute. The route accepts `GET` and `POST` so managed schedulers such as Vercel Cron work without modification; see [Deploy to Vercel](deploy-vercel.md) for the plan-dependent schedule limits. Do not expose the secret to browsers. Each claim carries a unique token. A lease older than 15 minutes is quarantined as uncertain, never automatically replayed, because the provider may have accepted the request before the worker stopped.
 
 Alert on pending-job age, uncertain and terminal deliveries, provider error codes, and divergence between provider delivery status and outbox status. Logs contain inquiry/job identifiers but no contact details. Reconcile provider references and dashboards before manually resetting an uncertain row. A scheduler is mandatory: without it, accepted inquiries remain queued. The same worker anonymizes expired lead PII and purges expired stored WhatsApp events.
 

@@ -38,7 +38,11 @@ npx prisma migrate deploy # reviewed production migrations
 npm run db:studio
 ```
 
+## Deployment
+This is a Next.js application, not a static page; it cannot be viewed by opening a file. Run it locally with the commands above, or see [Deploy to Vercel](docs/deploy-vercel.md) for a hosted URL.
+
 ## Documentation
+- [Deploy to Vercel](docs/deploy-vercel.md)
 - [Information architecture, routing and state machine](docs/information-architecture.md)
 - [Design system and CSS/Tailwind tokens](docs/design-system.md)
 - [Accessibility and performance](docs/accessibility-performance.md)
